@@ -4,7 +4,7 @@ Custom date picker in jetpack compose
 
 
 <p align="center">
-  <img src="https://emojipedia-us.s3.dualstack.us-west-1.amazonaws.com/thumbs/240/apple/285/construction_1f6a7.png" width="100" alt="Under Construction">
+  <img src="🚧" width="100" alt="Under Construction">
 </p>
 
 # Under Construction
