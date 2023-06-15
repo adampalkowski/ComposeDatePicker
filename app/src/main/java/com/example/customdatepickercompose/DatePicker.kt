@@ -74,7 +74,7 @@ fun DatePickerTimeline(
     todayLabel: @Composable BoxScope.() -> Unit = {},
     onDateSelected: (LocalDate) -> Unit,
 ) {
-        // The first date shown on the calendar
+    // The first date shown on the calendar
     val startDate by remember {
         mutableStateOf(state.initialDate.minusDays(pastDaysCount.toLong()))
     }

@@ -3,6 +3,7 @@ package com.example.customdatepickercompose
 import androidx.annotation.DrawableRes
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
@@ -20,6 +21,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
@@ -28,27 +30,20 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.zIndex
 import java.time.LocalDate
 import java.time.Month
 import java.time.format.DateTimeFormatter
 import java.util.*
 import kotlin.time.Duration.Companion.days
 
-
 private val defaultCardShape = RoundedCornerShape(8.dp)
 
-/**
- * Represents the selected date for a horizontal date picker.
- *
- * @param selectedDay The selected day of the month.
- * @param selectedMonth The selected month (January is 0).
- * @param selectedYear The selected year.
- * @param autoScrollToSelectedDate Whether to scroll to the selected date automatically.
- */
+
 class HorizontalDateState2(
-     selectedDay: Int,
-     selectedMonth: Int,
-     selectedYear: Int,
+    selectedDay: Int,
+    selectedMonth: Int,
+    selectedYear: Int,
     shouldScrollToSelectedDate: Boolean = true,
 ) {
     private var _selectedDay by mutableStateOf(selectedDay, structuralEqualityPolicy())
@@ -124,26 +119,29 @@ fun rememberHorizontalDatePickerState2(  initialCalendar: Calendar = Calendar.ge
 fun HorizontalDatePicker(state: HorizontalDateState2 = rememberHorizontalDatePickerState2()) {
     val locale = Locale.ENGLISH
     //month year
-    Surface() {
-        Column() {
-            MonthYearPicker(
-                modifier=Modifier.fillMaxWidth(),
-                monthText = Month.of(state.selectedMonth).toString(),
-                yearText = state.selectedYear,
-                monthIncreased = {
-                 state.increaseMonth()
-                },
-                monthDecreased = { state.decreaseMonth() },
-                yearIncreased = {state.increaseYear() },
-                yearDecreased = { state.decreaseYear() })
-            //LOCALE SET TO ENGLISH
-            DayPicker( selectedDay = state.selectedDay,
-                year = state.selectedYear,
-                month = state.selectedMonth,
-                locale = locale,
-                onDayClick = { day -> state.setSelectedDay(day) }
-            )
-        }
+    Column() {
+        MonthYearPicker(
+            modifier=Modifier.fillMaxWidth(),
+            monthText = Month.of(state.selectedMonth).toString(),
+            yearText = state.selectedYear,
+            monthIncreased = {
+                state.increaseMonth()
+            },
+            monthDecreased = { state.decreaseMonth() },
+            yearIncreased = {state.increaseYear() },
+            yearDecreased = { state.decreaseYear() })
+        //LOCALE SET TO ENGLISH
+        Spacer(modifier = Modifier.height(6.dp))
+        DayPicker( selectedDay = state.selectedDay,
+            year = state.selectedYear,
+            month = state.selectedMonth,
+            locale = locale,
+            onDayClick = { day ->
+                state.setSelectedDay(day)
+            }
+        )
+        Spacer(modifier = Modifier.height(6.dp))
+
     }
 
 }
@@ -164,11 +162,12 @@ fun DayPicker(
     dayCardShape: Shape = defaultCardShape,
     dayCardBorder: BorderStroke = BorderStroke(1.dp, Color.Black.copy(0.1f)),
     dayCardBackgroundColor: Color = Color.White,
-    dayCardTextColor: Color = Color.Black,
-    selectedDayCardBackgroundColor: Color = Color.Black,
+    dayCardTextColor: Color = MaterialTheme.colorScheme.primary,
+    selectedDayCardBackgroundColor: Color = MaterialTheme.colorScheme.primaryContainer,
+    selectedDayCardBackgroundDeptColor: Color = Color(0xFF5E6FAB),
     selectedDayCardTextColor: Color = Color.White,
-    dayOfWeekTextStyle: TextStyle = MaterialTheme.typography.bodyLarge,
-    dayOfMonthTextStyle: TextStyle = MaterialTheme.typography.bodyLarge,
+    dayOfWeekTextStyle: TextStyle = TextStyle( fontWeight = FontWeight.Medium, fontSize = 14.sp,color=Color.Black),
+    dayOfMonthTextStyle: TextStyle =  TextStyle( fontWeight = FontWeight.SemiBold, fontSize = 14.sp,color=Color.Black),
     dayOfWeekFormatter: DateTimeFormatter = DateTimeFormatter.ofPattern("E", locale)
 ) {
     val listState = rememberLazyListState(
@@ -177,27 +176,65 @@ fun DayPicker(
     )
     val days: List<LocalDate> = daysOfMonth(year, month)
 
-    LazyRow(state = listState) {
+    LazyRow(modifier=Modifier.padding(horizontal = 0.dp),state = listState) {
         items(days) { day ->
-            Card(
-                modifier = modifier,
-                border = dayCardBorder,
-                shape = dayCardShape,
-                onClick = { onDayClick(day.dayOfMonth) }
-            ) {
+            if (day.dayOfMonth == selectedDay){
                 Column(
                     modifier = Modifier
-                        .background(if (day.dayOfMonth == selectedDay) selectedDayCardBackgroundColor else dayCardBackgroundColor)
+                    ,
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Text(
+                        text = day.format(dayOfWeekFormatter),
+                        style = dayOfWeekTextStyle,
+                        color= dayCardTextColor
+                    )
+                    Spacer(modifier = Modifier.height(4.dp))
+
+
+                    Card(
+                        modifier = Modifier
+                            .size(48.dp)
+                            .zIndex(2f)
+                            .graphicsLayer {
+                                translationY = -10f
+                            },
+                        colors = CardDefaults.cardColors(
+                            contentColor = Color.Transparent,
+                            containerColor = if (day.dayOfMonth == selectedDay) selectedDayCardBackgroundColor else dayCardBackgroundColor
+                        ),
+                        shape = RoundedCornerShape(12.dp),
+                        elevation = CardDefaults.cardElevation(defaultElevation = 8.dp),
+                        onClick = { onDayClick(day.dayOfMonth) }
+                    ) {
+                        Box(modifier =Modifier.fillMaxSize(), contentAlignment = Alignment.Center){
+                            Text(
+                                text = day.dayOfMonth.toString(),
+                                style = dayOfMonthTextStyle,
+                                fontSize = 14.sp,
+                                fontWeight = if (day.dayOfMonth == selectedDay) FontWeight.SemiBold else FontWeight.Normal,
+                                color=if (day.dayOfMonth == selectedDay) selectedDayCardTextColor else dayCardTextColor
+                            )
+                        }
+
+                    }
+                }
+
+
+            }else{
+                Column(
+                    modifier = Modifier
+                        .clickable(onClick = { onDayClick(day.dayOfMonth) })
+                        .background(Color.Transparent)
                         .padding(horizontal = 12.dp, vertical = 12.dp),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     Text(
                         text = day.format(dayOfWeekFormatter),
                         style = dayOfWeekTextStyle,
-
                         color=if (day.dayOfMonth == selectedDay) selectedDayCardTextColor else dayCardTextColor
                     )
-                    Spacer(modifier = Modifier.height(7.dp))
+                    Spacer(modifier = Modifier.height(4.dp))
                     Text(
                         text = day.dayOfMonth.toString(),
                         style = dayOfMonthTextStyle,
@@ -207,7 +244,9 @@ fun DayPicker(
                     )
                 }
             }
+
             Spacer(modifier = Modifier.width(4.dp))
+
         }
     }
 
@@ -224,15 +263,15 @@ fun MonthYearPicker(
     yearIncreased: () -> Unit,
     monthTextStyle: TextStyle = TextStyle.Default.copy(
         fontSize = 16.sp,
-        fontWeight = FontWeight.Normal,
-        fontFamily = FontFamily.Default,
+        fontWeight = FontWeight.SemiBold,
+
         color = Color.Black
     ),
     yearTextStyle: TextStyle = TextStyle.Default.copy(
         fontSize = 16.sp,
-        fontWeight = FontWeight.Normal,
-        fontFamily = FontFamily.Default,
-        color = Color.Black
+        fontWeight = FontWeight.SemiBold,
+
+        color =Color.Black
     )
 
 ) {
@@ -243,15 +282,15 @@ fun MonthYearPicker(
         CardButton(
             onClick = yearDecreased,
             icon = R.drawable.double_arrow_left,
-            backgroundColor = Color.White,
-            borderColor = Color.Black.copy(alpha = 0.1f)
+            backgroundColor = Color.Transparent,
+            borderColor =MaterialTheme.colorScheme.primaryContainer
         )
         Spacer(modifier = Modifier.width(6.dp))
         CardButton(
             onClick = monthDecreased,
             icon = R.drawable.arrow_left,
-            backgroundColor = Color.White,
-            borderColor = Color.Black.copy(alpha = 0.1f)
+            backgroundColor =  Color.Transparent,
+            borderColor =MaterialTheme.colorScheme.primaryContainer
         )
         Spacer(modifier = Modifier.width(12.dp))
         Text(text = monthText, style = monthTextStyle)
@@ -261,15 +300,15 @@ fun MonthYearPicker(
         CardButton(
             onClick = monthIncreased,
             icon = R.drawable.arrow_right,
-            backgroundColor = Color.White,
-            borderColor = Color.Black.copy(alpha = 0.1f)
+            backgroundColor =  Color.Transparent,
+            borderColor =MaterialTheme.colorScheme.primaryContainer
         )
         Spacer(modifier = Modifier.width(6.dp))
         CardButton(
             onClick = yearIncreased,
             icon = R.drawable.double_arrow_right,
-            backgroundColor = Color.White,
-            borderColor = Color.Black.copy(alpha = 0.1f)
+            backgroundColor = Color.Transparent,
+            borderColor = MaterialTheme.colorScheme.primaryContainer
         )
     }
 }
@@ -280,9 +319,9 @@ fun CardButton(
     modifier: Modifier = Modifier,
     @DrawableRes icon: Int,
     onClick: () -> Unit,
-    iconTint: Color = MaterialTheme.colorScheme.primary,
-    cardShape: Shape = defaultCardShape,
-    borderColor: Color = MaterialTheme.colorScheme.primaryContainer,
+    iconTint: Color =MaterialTheme.colorScheme.primary,
+    cardShape: Shape = RoundedCornerShape(6.dp),
+    borderColor: Color =Color(0xFFEAEAEA),
     backgroundColor: Color = MaterialTheme.colorScheme.background,
     cardPadding: Dp = 8.dp
 ) {
@@ -291,8 +330,8 @@ fun CardButton(
         onClick = onClick,
         shape = cardShape,
         border = BorderStroke(1.dp, color = borderColor),
-
-        ) {
+        colors = CardDefaults.cardColors(containerColor =  Color.Transparent, contentColor = Color.Transparent)
+    ) {
         Box(
             modifier = modifier
                 .background(color = backgroundColor)
@@ -307,5 +346,3 @@ fun CardButton(
         }
     }
 }
-
-
