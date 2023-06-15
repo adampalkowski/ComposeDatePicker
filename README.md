@@ -1,9 +1,10 @@
 # ComposeDatePicker
 Custom date picker in jetpack compose
-![calendar](https://user-images.githubusercontent.com/50372825/234139786-4166c418-83e5-4814-a201-0c13001a1fb4.PNG)
 
 
 
+
+![Przechwytywanie](https://github.com/adampalkowski/ComposeDatePicker/assets/50372825/03891437-78cf-41d3-b262-c46dcf0be721)
 
 
 # Under Construction
